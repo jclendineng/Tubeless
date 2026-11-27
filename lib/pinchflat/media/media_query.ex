@@ -76,11 +76,15 @@ defmodule Pinchflat.Media.MediaQuery do
     )
   end
 
+  # An unknown duration passes: upcoming and live streams have none until they end, and
+  # rejecting them here would hold them back until a later index happened to fill it in.
+  # The download worker looks the duration up right before downloading such an item.
   def meets_min_and_max_duration do
     dynamic(
       [mi, source],
-      (is_nil(source.min_duration_seconds) or fragment("duration_seconds >= ?", source.min_duration_seconds)) and
-        (is_nil(source.max_duration_seconds) or fragment("duration_seconds <= ?", source.max_duration_seconds))
+      is_nil(mi.duration_seconds) or
+        ((is_nil(source.min_duration_seconds) or mi.duration_seconds >= source.min_duration_seconds) and
+           (is_nil(source.max_duration_seconds) or mi.duration_seconds <= source.max_duration_seconds))
     )
   end
 

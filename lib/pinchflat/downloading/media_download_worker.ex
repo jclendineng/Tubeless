@@ -13,9 +13,11 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
   alias Pinchflat.Tasks
   alias Pinchflat.Repo
   alias Pinchflat.Media
+  alias Pinchflat.Sources
   alias Pinchflat.Settings
   alias Pinchflat.Media.FileSyncing
   alias Pinchflat.YtDlp.UnavailableMedia
+  alias Pinchflat.YtDlp.Media, as: YtDlpMedia
   alias Pinchflat.Downloading.MediaDownloader
   alias Pinchflat.Podcasts.PodcastExportWorker
 
@@ -51,7 +53,11 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
     should_force = Map.get(args, "force", false)
     is_quality_upgrade = Map.get(args, "quality_upgrade?", false)
 
-    media_item = fetch_and_run_prevent_download_user_script(media_item_id)
+    media_item =
+      media_item_id
+      |> fetch_and_run_prevent_download_user_script()
+      |> maybe_fill_in_unknown_duration(should_force)
+
     is_recovery_retry = recovery_retry?(media_item, attempt)
 
     if should_download_media?(media_item, should_force, is_quality_upgrade || is_recovery_retry) do
@@ -85,6 +91,35 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
 
     (is_pending && source.download_media && !media_item.prevent_download) || should_force
   end
+
+  # An item indexed while it was upcoming or live has no duration, which the pending check
+  # lets through. On a source with duration limits, look it up before downloading so the
+  # limits apply. If the lookup fails (eg: the stream hasn't started), the download's own
+  # precheck holds the item back as it would anywhere else. Items that won't download
+  # anyway (already downloaded, ignored, or on a source not downloading) are left alone.
+  defp maybe_fill_in_unknown_duration(
+         %{duration_seconds: nil, media_filepath: nil, prevent_download: false} = media_item,
+         false = _should_force
+       ) do
+    source = media_item.source
+
+    if source.download_media && (source.min_duration_seconds || source.max_duration_seconds) do
+      use_cookies = Sources.use_cookies?(source, :metadata)
+
+      case YtDlpMedia.get_media_attributes(media_item.original_url, [], use_cookies: use_cookies) do
+        {:ok, %{duration_seconds: duration}} when is_integer(duration) ->
+          {:ok, media_item} = Media.update_media_item(media_item, %{duration_seconds: duration})
+          media_item
+
+        _ ->
+          media_item
+      end
+    else
+      media_item
+    end
+  end
+
+  defp maybe_fill_in_unknown_duration(media_item, _should_force), do: media_item
 
   # If a user script exists and, when run, returns a non-zero exit code, prevent this and all future downloads
   # of the media item.

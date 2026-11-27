@@ -310,6 +310,46 @@ defmodule Pinchflat.Downloading.MediaDownloadWorkerTest do
     end
   end
 
+  describe "perform/1 when the duration is unknown and the source has duration limits" do
+    setup %{media_item: media_item} do
+      {:ok, _} = Sources.update_source(media_item.source, %{max_duration_seconds: 600})
+
+      :ok
+    end
+
+    test "looks up the duration and skips the download when it's over the limit", %{media_item: media_item} do
+      expect(YtDlpRunnerMock, :run, fn _url, :get_media_attributes, _opts, _ot, _addl ->
+        {:ok, Phoenix.json_library().encode!(%{"duration" => 1200})}
+      end)
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id})
+      media_item = Repo.reload!(media_item)
+
+      assert media_item.duration_seconds == 1200
+      assert media_item.media_filepath == nil
+    end
+
+    test "downloads when the looked-up duration is within the limits", %{media_item: media_item} do
+      expect(YtDlpRunnerMock, :run, fn _url, :get_media_attributes, _opts, _ot, _addl ->
+        {:ok, Phoenix.json_library().encode!(%{"duration" => 300})}
+      end)
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id})
+
+      assert Repo.reload!(media_item).media_filepath != nil
+    end
+
+    test "falls through to the download when the lookup fails", %{media_item: media_item} do
+      expect(YtDlpRunnerMock, :run, fn _url, :get_media_attributes, _opts, _ot, _addl ->
+        {:error, "This live event will begin in a few moments", 1}
+      end)
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id})
+
+      assert Repo.reload!(media_item).media_filepath != nil
+    end
+  end
+
   describe "perform/1 when ignore_unavailable_media is enabled" do
     setup %{media_item: media_item} do
       Settings.set(ignore_unavailable_media: true)
