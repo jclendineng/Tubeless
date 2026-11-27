@@ -404,6 +404,14 @@ defmodule Pinchflat.MediaTest do
       assert Media.list_pending_media_items_for(source) == [normal_media_item]
     end
 
+    test "returns media items with no recorded duration yet" do
+      source = source_fixture(%{min_duration_seconds: 10, max_duration_seconds: 20})
+
+      upcoming_media_item = media_item_fixture(%{source_id: source.id, media_filepath: nil, duration_seconds: nil})
+
+      assert Media.list_pending_media_items_for(source) == [upcoming_media_item]
+    end
+
     test "does not apply a min duration if none is specified" do
       source = source_fixture(%{min_duration_seconds: nil, max_duration_seconds: 20})
 

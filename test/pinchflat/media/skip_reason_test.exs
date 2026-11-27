@@ -83,7 +83,7 @@ defmodule Pinchflat.Media.SkipReasonTest do
       assert SkipReason.reason(item, source) == :too_long
     end
 
-    test "returns :filtered as a fallback (null duration excluded by a duration filter)" do
+    test "returns :filtered as a fallback (null duration on a source with a duration filter)" do
       {source, item} = build(%{min_duration_seconds: 600}, %{duration_seconds: nil})
 
       assert SkipReason.reason(item, source) == :filtered
