@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.0.5](https://github.com/jclendineng/Tubeless/compare/v0.0.4...v0.0.5) (2026-11-27)
+
+
+### Bug Fixes
+
+* give streamed media a correct filename when saved ([#14](https://github.com/jclendineng/Tubeless/issues/14)) ([adad761](https://github.com/jclendineng/Tubeless/commit/adad761d3a8960c7614394ccffc9155a77eba969))
+* retry downloads that finished without SponsorBlock processing ([#13](https://github.com/jclendineng/Tubeless/issues/13)) ([939cfc1](https://github.com/jclendineng/Tubeless/commit/939cfc13b67558758338678fefebbf2bc10392da))
+* stop downloading Shorts when a profile excludes them ([#10](https://github.com/jclendineng/Tubeless/issues/10)) ([d78bc6e](https://github.com/jclendineng/Tubeless/commit/d78bc6e97efec1da4d07e282ee541ec9669e5568))
+* stop media item edits from changing file paths ([#9](https://github.com/jclendineng/Tubeless/issues/9)) ([884d2bc](https://github.com/jclendineng/Tubeless/commit/884d2bc470d6b408af0a5c5a563b478f17718178))
+* stop quality upgrades from re-downloading excluded or paused media ([#11](https://github.com/jclendineng/Tubeless/issues/11)) ([9c798c8](https://github.com/jclendineng/Tubeless/commit/9c798c88702c09cfdde342ff656a8601f0be1491))
+* stop treating upcoming premieres as livestreams ([#12](https://github.com/jclendineng/Tubeless/issues/12)) ([f1f9b32](https://github.com/jclendineng/Tubeless/commit/f1f9b3279b2960fa2b674ddcb77b4c536b122975))
+
+
+### Chores
+
+* **ci:** approve release PR CI automatically ([9883796](https://github.com/jclendineng/Tubeless/commit/9883796909022b917c1892897df7a7921cfdb017))
+* **ci:** keep release-please green when its PR is unchanged ([#15](https://github.com/jclendineng/Tubeless/issues/15)) ([3406ede](https://github.com/jclendineng/Tubeless/commit/3406edebb670a96974a559904f3d1c69a07ff339))
+* **ci:** prune dev images with plain API calls ([#7](https://github.com/jclendineng/Tubeless/issues/7)) ([b43e2f1](https://github.com/jclendineng/Tubeless/commit/b43e2f1ab7e3f3da28f4e235abba1d0d16f72bf6))
+
+
+### Documentation
+
+* point the README at the fork's image and repo ([a2d22d0](https://github.com/jclendineng/Tubeless/commit/a2d22d0871c4b21222c794539c4abbbc0b878aed))
+
 ## [0.0.4](https://github.com/jclendineng/Tubeless/compare/v0.0.3...v0.0.4) (2026-11-27)
 
 
