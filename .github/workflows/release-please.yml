@@ -98,11 +98,14 @@ jobs:
       # through without anyone clicking Approve. Only runs on this repo's own release
       # branch are approved, never a fork's.
       - name: Approve CI on the release PR
-        if: steps.release.outputs.pr
+        if: steps.release.outputs.pr != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          # parsed in the script, not with fromJSON() here: step env is evaluated even when
+          # the step is skipped, and fromJSON('') fails the whole job when the PR is unchanged
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
         run: |
+          BRANCH=$(jq -r .headBranchName <<<"$RELEASE_PR")
           # only the run for the PR's current commit; older held runs are stale
           sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$BRANCH" --jq .object.sha)
           for attempt in $(seq 1 12); do
