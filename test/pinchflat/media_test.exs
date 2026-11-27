@@ -144,6 +144,51 @@ defmodule Pinchflat.MediaTest do
       assert Media.list_upgradeable_media_items() == []
     end
 
+    test "still returns media items that pass the source's and profile's filters" do
+      source_attrs = %{title_filter_regex: "^Keep", min_duration_seconds: 30}
+      profile_attrs = %{shorts_behaviour: :exclude, livestream_behaviour: :exclude}
+      item_attrs = %{title: "Keep this one", duration_seconds: 60}
+      media_item = upgradeable_media_item_fixture(source_attrs, profile_attrs, item_attrs)
+
+      assert Media.list_upgradeable_media_items() == [media_item]
+    end
+
+    test "does not return media items from a paused source" do
+      upgradeable_media_item_fixture(%{enabled: false})
+
+      assert Media.list_upgradeable_media_items() == []
+    end
+
+    test "does not return shorts when the profile excludes them" do
+      upgradeable_media_item_fixture(%{}, %{shorts_behaviour: :exclude}, %{short_form_content: true})
+
+      assert Media.list_upgradeable_media_items() == []
+    end
+
+    test "does not return livestreams when the profile excludes them" do
+      upgradeable_media_item_fixture(%{}, %{livestream_behaviour: :exclude}, %{livestream: true})
+
+      assert Media.list_upgradeable_media_items() == []
+    end
+
+    test "does not return media items that fail the source's title filter" do
+      upgradeable_media_item_fixture(%{title_filter_regex: "^Keep"}, %{}, %{title: "Drop this one"})
+
+      assert Media.list_upgradeable_media_items() == []
+    end
+
+    test "does not return media items outside the source's duration limits" do
+      upgradeable_media_item_fixture(%{min_duration_seconds: 120}, %{}, %{duration_seconds: 60})
+
+      assert Media.list_upgradeable_media_items() == []
+    end
+
+    test "does not return media items uploaded before the source's download cutoff" do
+      upgradeable_media_item_fixture(%{download_cutoff_date: Date.utc_today()})
+
+      assert Media.list_upgradeable_media_items() == []
+    end
+
     test "does not return media items without a redownload delay" do
       media_profile = media_profile_fixture(%{redownload_delay_days: nil})
       source = source_fixture(%{media_profile_id: media_profile.id})
@@ -1110,5 +1155,15 @@ defmodule Pinchflat.MediaTest do
 
       assert updated_media_item.upload_date_index == 0
     end
+  end
+
+  # A downloaded item that is past its profile's redownload delay, so only the
+  # given source, profile, and item attributes decide whether it's upgradeable
+  defp upgradeable_media_item_fixture(source_attrs, profile_attrs \\ %{}, item_attrs \\ %{}) do
+    media_profile = media_profile_fixture(Map.merge(%{redownload_delay_days: 4}, profile_attrs))
+    source = source_fixture(Map.merge(%{media_profile_id: media_profile.id}, source_attrs))
+
+    defaults = %{source_id: source.id, uploaded_at: now_minus(6, :days), media_downloaded_at: now_minus(5, :days)}
+    media_item_fixture(Map.merge(defaults, item_attrs))
   end
 end

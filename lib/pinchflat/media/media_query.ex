@@ -183,13 +183,21 @@ defmodule Pinchflat.Media.MediaQuery do
     )
   end
 
+  # A quality upgrade is a fresh download, so it honors the same settings a first
+  # download does: nothing from a paused source, and nothing the source or profile
+  # now excludes (shorts, livestreams, title filter, duration limits, date cutoff).
   def upgradeable do
     dynamic(
       [mi, source],
       ^downloaded() and
+        source.enabled == true and
         not (^download_prevented()) and
         not (^redownloaded()) and
-        ^past_redownload_delay()
+        ^past_redownload_delay() and
+        ^upload_date_after_source_cutoff() and
+        ^format_matching_profile_preference() and
+        ^matches_source_title_regex() and
+        ^meets_min_and_max_duration()
     )
   end
 
