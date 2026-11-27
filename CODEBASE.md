@@ -39,7 +39,7 @@
 | Technology                  | Role                                                                                                  |
 | --------------------------- | ----------------------------------------------------------------------------------------------------- |
 | SQLite (via `ecto_sqlite3`) | Embedded database — no external DB process                                                            |
-| Ecto 3.12                   | ORM and query layer                                                                                   |
+| Ecto 3.14                   | ORM and query layer                                                                                   |
 | SQLean                      | SQLite extension library loaded at runtime per architecture (`sqlean-linux-x86` / `sqlean-linux-arm`) |
 
 ### Background Jobs
