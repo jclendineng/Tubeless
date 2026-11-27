@@ -19,10 +19,10 @@
 
 <div align="center">
 
-[![](https://img.shields.io/github/v/release/GhostMaintainers/Tubeless?style=for-the-badge&color=purple)](https://github.com/GhostMaintainers/Tubeless/releases)
+[![](https://img.shields.io/github/v/release/jclendineng/Tubeless?style=for-the-badge&color=purple)](https://github.com/jclendineng/Tubeless/releases)
 [![](https://img.shields.io/static/v1?style=for-the-badge&logo=reddit&message=Post&color=FF5700&label=Reddit)](https://reddit.com/r/Tubeless)
-[![](https://img.shields.io/github/actions/workflow/status/GhostMaintainers/Tubeless/release-please.yml?style=for-the-badge)](https://github.com/GhostMaintainers/Tubeless/actions/workflows/release-please.yml)
-[![](https://img.shields.io/github/license/GhostMaintainers/Tubeless?style=for-the-badge&color=ee512b)](LICENSE)
+[![](https://img.shields.io/github/actions/workflow/status/jclendineng/Tubeless/release-please.yml?style=for-the-badge)](https://github.com/jclendineng/Tubeless/actions/workflows/release-please.yml)
+[![](https://img.shields.io/github/license/jclendineng/Tubeless?style=for-the-badge&color=ee512b)](LICENSE)
 
 </div>
 
@@ -74,7 +74,7 @@ If it doesn't work for your use case, please make a feature request! You can als
 ```yaml
 services:
   tubeless:
-    image: ghcr.io/ghostmaintainers/tubeless:latest
+    image: ghcr.io/jclendineng/tubeless:latest
     environment:
       # Set the timezone to your local timezone
       - TZ=America/Chicago
@@ -94,8 +94,8 @@ services:
 Tubeless is a drop-in replacement for Pinchflat — the data format is identical, so no database changes are needed. This works whether you're coming from the original `kieraneglin/pinchflat` or the `ghostmaintainers/pinchflat` fork. Just update the image reference in your Docker run command or compose file:
 
 ```text
-ghcr.io/kieraneglin/pinchflat:latest       →  ghcr.io/ghostmaintainers/tubeless:latest
-ghcr.io/ghostmaintainers/pinchflat:latest  →  ghcr.io/ghostmaintainers/tubeless:latest
+ghcr.io/kieraneglin/pinchflat:latest       →  ghcr.io/jclendineng/tubeless:latest
+ghcr.io/ghostmaintainers/pinchflat:latest  →  ghcr.io/jclendineng/tubeless:latest
 ```
 
 Stop the old container, update the image reference, and recreate it. Your `/config` and `/downloads` volumes carry over unchanged.
@@ -125,11 +125,11 @@ See [LICENSE](LICENSE) file
 
 <div align="center">
 
-<a href="https://www.star-history.com/?repos=ghostmaintainers%2Ftubeless&type=date&logscale&releases&legend=bottom-right">
+<a href="https://www.star-history.com/?repos=jclendineng%2Ftubeless&type=date&logscale&releases&legend=bottom-right">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ghostmaintainers/tubeless&type=date&theme=dark&legend=bottom-right" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ghostmaintainers/tubeless&type=date&legend=bottom-right" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ghostmaintainers/tubeless&type=date&legend=bottom-right" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=jclendineng/tubeless&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=jclendineng/tubeless&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=jclendineng/tubeless&type=date&legend=bottom-right" />
  </picture>
 </a>
 
