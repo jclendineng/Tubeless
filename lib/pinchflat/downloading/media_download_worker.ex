@@ -47,20 +47,29 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
   Returns :ok | {:error, any, ...any}
   """
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"id" => media_item_id} = args}) do
+  def perform(%Oban.Job{args: %{"id" => media_item_id} = args, attempt: attempt}) do
     should_force = Map.get(args, "force", false)
     is_quality_upgrade = Map.get(args, "quality_upgrade?", false)
 
     media_item = fetch_and_run_prevent_download_user_script(media_item_id)
+    is_recovery_retry = recovery_retry?(media_item, attempt)
 
-    if should_download_media?(media_item, should_force, is_quality_upgrade) do
-      download_media_and_schedule_jobs(media_item, is_quality_upgrade, should_force)
+    if should_download_media?(media_item, should_force, is_quality_upgrade || is_recovery_retry) do
+      download_media_and_schedule_jobs(media_item, is_quality_upgrade, should_force || is_recovery_retry)
     else
       :ok
     end
   rescue
     Ecto.NoResultsError -> Logger.info("#{__MODULE__} discarded: media item #{media_item_id} not found")
     Ecto.StaleEntryError -> Logger.info("#{__MODULE__} discarded: media item #{media_item_id} stale")
+  end
+
+  # A recovered download (eg: SponsorBlock was unreachable) keeps the file but records the
+  # error and asks Oban for a retry. The item already counts as downloaded, so without this
+  # the retry would find it not pending and do nothing, leaving it unprocessed for good.
+  # The retry instead re-downloads over the file, like a quality upgrade would.
+  defp recovery_retry?(media_item, attempt) do
+    attempt > 1 && !!media_item.media_filepath && !!media_item.last_error
   end
 
   # If this is a quality upgrade, only check if the source is set to download media
