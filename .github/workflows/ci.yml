@@ -197,6 +197,9 @@ jobs:
           file: ./docker/selfhosted.Dockerfile
           platforms: linux/amd64
           push: true
+          # one package version per image, so the dev-image cleanup's keep count can't
+          # delete an attestation out from under an RC image it keeps
+          provenance: false
           tags: ghcr.io/${{ steps.meta.outputs.repo }}-dev:rc-${{ steps.meta.outputs.version }}-${{ github.run_number }}
           build-args: CI_BASE_IMAGE=${{ env.CI_BASE_IMAGE }}
           cache-from: type=gha
