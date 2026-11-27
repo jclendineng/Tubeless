@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Delete old dev images
     timeout-minutes: 10
+    # the action still declares Node 20, which runners have retired. opt in to
+    # Node 24 so it runs there by choice rather than with a deprecation warning
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
         with:

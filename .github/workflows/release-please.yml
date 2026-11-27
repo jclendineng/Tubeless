@@ -80,6 +80,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -91,6 +92,32 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # GitHub holds CI on the release PR for approval, because the bot that opens it
+      # counts as a first-time contributor. Approve those runs here so a release goes
+      # through without anyone clicking Approve. Only runs on this repo's own release
+      # branch are approved, never a fork's.
+      - name: Approve CI on the release PR
+        if: steps.release.outputs.pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+        run: |
+          # only the run for the PR's current commit; older held runs are stale
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$BRANCH" --jq .object.sha)
+          for attempt in $(seq 1 12); do
+            ids=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$sha&status=action_required" \
+              --jq ".workflow_runs[] | select(.head_repository.full_name == \"$GITHUB_REPOSITORY\") | .id")
+            if [ -n "$ids" ]; then
+              for id in $ids; do
+                gh api -X POST "repos/$GITHUB_REPOSITORY/actions/runs/$id/approve"
+                echo "Approved run $id"
+              done
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "No CI run waiting for approval on $BRANCH at $sha"
 
   docker:
     name: Build and Push Docker Image
