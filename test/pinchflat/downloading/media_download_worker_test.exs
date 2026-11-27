@@ -503,6 +503,40 @@ defmodule Pinchflat.Downloading.MediaDownloadWorkerTest do
       assert media_item.media_redownloaded_at != nil
     end
 
+    test "keeps the original download time so retention isn't reset", %{media_item: media_item} do
+      downloaded_at = ~U[2024-01-01 00:00:00Z]
+      attrs = %{media_filepath: "foo.mp4", media_downloaded_at: downloaded_at}
+      {:ok, media_item} = Media.update_media_item(media_item, attrs)
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id, quality_upgrade?: true})
+
+      assert Repo.reload!(media_item).media_downloaded_at == downloaded_at
+    end
+
+    test "keeps the original download time when the upgrade is recovered for a retry", %{media_item: media_item} do
+      downloaded_at = ~U[2024-01-01 00:00:00Z]
+      attrs = %{media_filepath: "foo.mp4", media_downloaded_at: downloaded_at}
+      {:ok, media_item} = Media.update_media_item(media_item, attrs)
+
+      stub(YtDlpRunnerMock, :run, fn
+        _url, :get_downloadable_status, _opts, _ot, _addl ->
+          {:ok, "{}"}
+
+        _url, :download, _opts, _ot, addl ->
+          [{:output_filepath, filepath} | _] = addl
+          File.write(filepath, render_metadata(:media_metadata))
+
+          {:error, "Unable to communicate with SponsorBlock", 1}
+
+        _url, :download_thumbnail, _opts, _ot, _addl ->
+          {:ok, ""}
+      end)
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id, quality_upgrade?: true})
+
+      assert Repo.reload!(media_item).media_downloaded_at == downloaded_at
+    end
+
     test "ignores whether the media item is pending when re-downloaded", %{media_item: media_item} do
       expect(YtDlpRunnerMock, :run, 3, fn
         _url, :get_downloadable_status, _opts, _ot, _addl -> {:ok, "{}"}

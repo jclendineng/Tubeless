@@ -85,7 +85,7 @@ Key workers:
 - `FastIndexingWorker` (`lib/pinchflat/fast_indexing/`) — polls YouTube RSS feeds to detect new videos quickly without hitting the API
 - `MediaCollectionIndexingWorker` (`lib/pinchflat/slow_indexing/`) — full yt-dlp metadata fetch for a Source (slow indexing)
 - `MediaDownloadWorker` (`lib/pinchflat/downloading/`) — downloads a single MediaItem via yt-dlp
-- `MediaQualityUpgradeWorker` (`lib/pinchflat/downloading/`) — re-downloads media after a configured delay to get better quality. An upgrade is a fresh download, so `MediaQuery.upgradeable/0` applies the same rules as a first download: skips paused sources and anything the source/profile now excludes (shorts, livestreams, title filter, duration limits, download cutoff)
+- `MediaQualityUpgradeWorker` (`lib/pinchflat/downloading/`) — re-downloads media after a configured delay to get better quality. An upgrade is a fresh download, so `MediaQuery.upgradeable/0` applies the same rules as a first download: skips paused sources and anything the source/profile now excludes (shorts, livestreams, title filter, duration limits, download cutoff). An upgrade keeps the item's original `media_downloaded_at`, so retention still counts from the first download
 - `MediaRetentionWorker` (`lib/pinchflat/downloading/`) — deletes old media per retention settings
 - `SourceMetadataStorageWorker` (`lib/pinchflat/metadata/`) — fetches and stores source-level metadata (images, NFO, etc.)
 - `FileSyncingWorker` (`lib/pinchflat/media/`) — reconciles MediaItem records with files on disk
