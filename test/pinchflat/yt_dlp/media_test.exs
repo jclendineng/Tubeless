@@ -282,7 +282,7 @@ defmodule Pinchflat.YtDlp.MediaTest do
   describe "indexing_output_template/0" do
     test "contains all the greatest hits" do
       attrs =
-        ~w(id title live_status original_url description aspect_ratio duration upload_date timestamp playlist_index filename)a
+        ~w(id title live_status original_url description aspect_ratio duration upload_date timestamp playlist_index filename media_type)a
 
       formatted_attrs = "%(.{#{Enum.join(attrs, ",")}})j"
 
@@ -334,6 +334,43 @@ defmodule Pinchflat.YtDlp.MediaTest do
     test "sets short_form_content to true if the aspect ratio are duration are right" do
       response = %{
         "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
+        "aspect_ratio" => 0.5,
+        "duration" => 150,
+        "upload_date" => "20210101"
+      }
+
+      assert %Media{short_form_content: true} = Media.response_to_struct(response)
+    end
+
+    test "sets short_form_content to true when YouTube classifies it as a short" do
+      # an audio-only format has no aspect ratio, so only media_type can tell
+      response = %{
+        "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
+        "media_type" => "short",
+        "aspect_ratio" => nil,
+        "duration" => 43,
+        "upload_date" => "20210101"
+      }
+
+      assert %Media{short_form_content: true} = Media.response_to_struct(response)
+    end
+
+    test "trusts YouTube's classification over the aspect ratio heuristic" do
+      response = %{
+        "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
+        "media_type" => "video",
+        "aspect_ratio" => 0.5,
+        "duration" => 150,
+        "upload_date" => "20210101"
+      }
+
+      assert %Media{short_form_content: false} = Media.response_to_struct(response)
+    end
+
+    test "falls back to the heuristic for media types YouTube doesn't use" do
+      response = %{
+        "original_url" => "https://example.com/clips/bbbbbbbbbbb",
+        "media_type" => "clip",
         "aspect_ratio" => 0.5,
         "duration" => 150,
         "upload_date" => "20210101"

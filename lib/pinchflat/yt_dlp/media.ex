@@ -138,9 +138,11 @@ defmodule Pinchflat.YtDlp.Media do
   NOTE: playlist_index is really only useful for playlists that will never change their order.
   NOTE: I've switched back to `original_url` (from `webpage_url`) since it's started indicating
         if something is a short via the URL again
+  NOTE: `media_type` is YouTube's own classification ("short", "video", "livestream"), and
+        is the most reliable way to tell a short apart from a regular video
   """
   def indexing_output_template do
-    "%(.{id,title,live_status,original_url,description,aspect_ratio,duration,upload_date,timestamp,playlist_index,filename})j"
+    "%(.{id,title,live_status,original_url,description,aspect_ratio,duration,upload_date,timestamp,playlist_index,filename,media_type})j"
   end
 
   @doc """
@@ -165,9 +167,16 @@ defmodule Pinchflat.YtDlp.Media do
   end
 
   defp short_form_content?(response) do
-    if String.contains?(response["original_url"], "/shorts/") do
-      true
-    else
+    cond do
+      String.contains?(response["original_url"], "/shorts/") ->
+        true
+
+      # YouTube's own classification. Prefer it over the heuristic below, which needs the
+      # aspect ratio of the selected format and so misses shorts whenever that format has
+      # no video stream (an audio-only pick, or video formats the server can't fetch)
+      response["media_type"] in ["short", "video", "livestream"] ->
+        response["media_type"] == "short"
+
       # Sometimes shorts are returned without /shorts/ in the URL,
       # so we need to do our best to determine if it's a short. This
       # WILL returns false positives, but it's a best-effort approach
@@ -176,7 +185,8 @@ defmodule Pinchflat.YtDlp.Media do
       #
       # These don't fail if duration or aspect_ratio are missing
       # due to Elixir's comparison semantics
-      response["duration"] <= 180 && response["aspect_ratio"] <= 0.85
+      true ->
+        response["duration"] <= 180 && response["aspect_ratio"] <= 0.85
     end
   end
 
