@@ -1,19 +1,25 @@
 name: Dev Image Cleanup
 
+# Prunes the PR and RC images in the tubeless-dev package, keeping the 3 newest.
+# The workflow token can delete them because the package is linked to this repo,
+# so no secret is needed.
 on:
   schedule:
     - cron: '5 0 * * *' # every day at 00:05 UTC
+  workflow_dispatch:
+
+permissions:
+  packages: write
 
 jobs:
   clean:
     runs-on: ubuntu-latest
     name: Delete old dev images
+    timeout-minutes: 10
     steps:
-      - uses: snok/container-retention-policy@d3bdcf5ce9b05f685154e4a16c39233b245e3d53 # v3.1.0
+      - uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
         with:
-          account: ghostmaintainers
-          token: ${{ secrets.IMG_RETENTION }}
-          image-names: tubeless-dev
-          keep-n-most-recent: 3
-          cut-off: 7d
-          dry-run: false
+          owner: ${{ github.repository_owner }}
+          package-name: tubeless-dev
+          package-type: container
+          min-versions-to-keep: 3
