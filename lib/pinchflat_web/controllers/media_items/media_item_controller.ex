@@ -90,7 +90,7 @@ defmodule PinchflatWeb.MediaItems.MediaItemController do
           |> put_resp_header("accept-ranges", "bytes")
           |> put_resp_header("content-range", "bytes #{start_pos}-#{end_pos}/#{file_size}")
           |> put_resp_header("content-length", to_string(length))
-          |> put_resp_header("content-disposition", "inline; filename=\"#{media_item.title}\"")
+          |> put_resp_header("content-disposition", content_disposition(media_item))
           |> send_file(206, media_item.media_filepath, start_pos, length)
 
         {:error, :invalid_range} ->
@@ -101,12 +101,23 @@ defmodule PinchflatWeb.MediaItems.MediaItemController do
           |> put_resp_header("accept-ranges", "bytes")
           |> put_resp_header("content-range", "bytes 0-#{file_size - 1}/#{file_size}")
           |> put_resp_header("content-length", to_string(file_size))
-          |> put_resp_header("content-disposition", "inline; filename=\"#{media_item.title}\"")
+          |> put_resp_header("content-disposition", content_disposition(media_item))
           |> send_file(200, media_item.media_filepath)
       end
     else
       send_resp(conn, 404, "File not found")
     end
+  end
+
+  # The title is arbitrary text: a quote would end the plain `filename` early and non-ASCII
+  # is decoded inconsistently there, so that one gets an ASCII stand-in and `filename*`
+  # (RFC 6266) carries the exact name. The extension makes a saved file playable.
+  defp content_disposition(media_item) do
+    filename = media_item.title <> Path.extname(media_item.media_filepath)
+    ascii_filename = String.replace(filename, ~r/[^\x20-\x7E]|["\\]/u, "_")
+    encoded_filename = URI.encode(filename, &URI.char_unreserved?/1)
+
+    ~s(inline; filename="#{ascii_filename}"; filename*=UTF-8''#{encoded_filename})
   end
 
   defp parse_range(conn, file_size) do

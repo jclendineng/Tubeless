@@ -4,6 +4,7 @@ defmodule PinchflatWeb.MediaItemControllerTest do
   import Pinchflat.MediaFixtures
 
   alias Pinchflat.Repo
+  alias Pinchflat.Media
   alias Pinchflat.Downloading.MediaDownloadWorker
 
   describe "show media" do
@@ -192,7 +193,7 @@ defmodule PinchflatWeb.MediaItemControllerTest do
       assert conn.status == 206
       assert {"content-range", "bytes 0-100/#{filesize}"} in conn.resp_headers
       assert {"content-length", "101"} in conn.resp_headers
-      assert {"content-disposition", "inline; filename=\"#{media_item.title}\""} in conn.resp_headers
+      assert {"content-disposition", expected_content_disposition(media_item)} in conn.resp_headers
     end
 
     test "streams the specified range", %{conn: conn, media_item: media_item} do
@@ -298,7 +299,17 @@ defmodule PinchflatWeb.MediaItemControllerTest do
       assert conn.status == 200
       assert {"content-length", to_string(filesize)} in conn.resp_headers
       assert {"content-range", "bytes 0-#{filesize - 1}/#{filesize}"} in conn.resp_headers
-      assert {"content-disposition", "inline; filename=\"#{media_item.title}\""} in conn.resp_headers
+      assert {"content-disposition", expected_content_disposition(media_item)} in conn.resp_headers
+    end
+
+    test "keeps quotes and non-ASCII titles intact in the filename", %{conn: conn, media_item: media_item} do
+      {:ok, media_item} = Media.update_media_item(media_item, %{title: ~s(Café "Live")})
+      ext = Path.extname(media_item.media_filepath)
+
+      conn = get(conn, ~p"/media/#{media_item.uuid}/stream")
+
+      expected = ~s(inline; filename="Caf_ _Live_#{ext}"; filename*=UTF-8''Caf%C3%A9%20%22Live%22#{ext})
+      assert {"content-disposition", expected} in conn.resp_headers
     end
 
     test "streams the entire file", %{conn: conn, media_item: media_item} do
@@ -337,5 +348,11 @@ defmodule PinchflatWeb.MediaItemControllerTest do
   defp create_media_item(_) do
     media_item = media_item_fixture()
     %{media_item: media_item}
+  end
+
+  defp expected_content_disposition(media_item) do
+    filename = media_item.title <> Path.extname(media_item.media_filepath)
+
+    ~s(inline; filename="#{filename}"; filename*=UTF-8''#{URI.encode(filename, &URI.char_unreserved?/1)})
   end
 end
