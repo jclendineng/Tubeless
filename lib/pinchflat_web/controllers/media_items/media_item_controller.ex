@@ -24,10 +24,15 @@ defmodule PinchflatWeb.MediaItems.MediaItemController do
     render(conn, :edit, media_item: media_item, changeset: changeset)
   end
 
+  # Only the fields the edit form offers. Everything else on a media item (file
+  # paths especially) is app-managed, and a path set from a request could be read
+  # back through the public stream endpoint or deleted along with the item.
+  @user_editable_fields ~w(prevent_download prevent_culling)
+
   def update(conn, %{"id" => id, "media_item" => params}) do
     media_item = Media.get_media_item!(id)
 
-    case Media.update_media_item(media_item, params) do
+    case Media.update_media_item(media_item, Map.take(params, @user_editable_fields)) do
       {:ok, media_item} ->
         conn
         |> put_flash(:info, "Media Item updated successfully.")

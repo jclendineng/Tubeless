@@ -37,19 +37,31 @@ defmodule PinchflatWeb.MediaItemControllerTest do
     setup [:create_media_item]
 
     test "redirects when data is valid", %{conn: conn, media_item: media_item} do
-      update_attrs = %{title: "New Title"}
+      update_attrs = %{prevent_download: true}
 
       conn = put(conn, ~p"/sources/#{media_item.source_id}/media/#{media_item}", media_item: update_attrs)
       assert redirected_to(conn) == ~p"/sources/#{media_item.source_id}/media/#{media_item}"
 
-      conn = get(conn, ~p"/sources/#{media_item.source_id}/media/#{media_item}")
-      assert html_response(conn, 200) =~ update_attrs[:title]
+      assert Repo.reload!(media_item).prevent_download
     end
 
     test "renders errors when data is invalid", %{conn: conn, media_item: media_item} do
-      conn = put(conn, ~p"/sources/#{media_item.source_id}/media/#{media_item}", media_item: %{title: nil})
+      path = ~p"/sources/#{media_item.source_id}/media/#{media_item}"
+      conn = put(conn, path, media_item: %{prevent_download: "not-a-boolean"})
 
       assert html_response(conn, 200) =~ "Editing"
+    end
+
+    test "ignores fields the form doesn't offer, like file paths", %{conn: conn, media_item: media_item} do
+      original = Repo.reload!(media_item)
+
+      path = ~p"/sources/#{media_item.source_id}/media/#{media_item}"
+      put(conn, path, media_item: %{media_filepath: "/etc/passwd", thumbnail_filepath: "/etc/hosts", title: "X"})
+
+      updated = Repo.reload!(media_item)
+      assert updated.media_filepath == original.media_filepath
+      assert updated.thumbnail_filepath == original.thumbnail_filepath
+      assert updated.title == original.title
     end
   end
 
