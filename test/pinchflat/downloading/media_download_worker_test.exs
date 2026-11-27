@@ -264,6 +264,52 @@ defmodule Pinchflat.Downloading.MediaDownloadWorkerTest do
     end
   end
 
+  describe "perform/1 when retrying a recovered download" do
+    setup %{media_item: media_item} do
+      # what a recovered download leaves behind: the file, plus the error that interrupted it
+      {:ok, media_item} =
+        Media.update_media_item(media_item, %{
+          media_filepath: "foo.mp4",
+          last_error: "Unable to communicate with SponsorBlock"
+        })
+
+      {:ok, %{media_item: media_item}}
+    end
+
+    test "re-downloads over the file on a retry", %{media_item: media_item} do
+      expect(YtDlpRunnerMock, :run, 3, fn
+        _url, :get_downloadable_status, _opts, _ot, _addl ->
+          {:ok, "{}"}
+
+        _url, :download, opts, _ot, _addl ->
+          assert :force_overwrites in opts
+
+          {:ok, render_metadata(:media_metadata)}
+
+        _url, :download_thumbnail, _opts, _ot, _addl ->
+          {:ok, ""}
+      end)
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id}, attempt: 2)
+
+      assert Repo.reload!(media_item).last_error == nil
+    end
+
+    test "doesn't re-download a downloaded item without a recorded error", %{media_item: media_item} do
+      expect(YtDlpRunnerMock, :run, 0, fn _url, :download, _opts, _ot, _addl -> :ok end)
+      Media.update_media_item(media_item, %{last_error: nil})
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id}, attempt: 2)
+    end
+
+    test "doesn't re-download if the source is set to not download", %{media_item: media_item} do
+      expect(YtDlpRunnerMock, :run, 0, fn _url, :download, _opts, _ot, _addl -> :ok end)
+      Sources.update_source(media_item.source, %{download_media: false})
+
+      perform_job(MediaDownloadWorker, %{id: media_item.id}, attempt: 2)
+    end
+  end
+
   describe "perform/1 when ignore_unavailable_media is enabled" do
     setup %{media_item: media_item} do
       Settings.set(ignore_unavailable_media: true)
