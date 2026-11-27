@@ -109,7 +109,8 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
         {:ok, updated_media_item} =
           Media.update_media_item(downloaded_media_item, %{
             media_size_bytes: compute_media_filesize(downloaded_media_item),
-            media_redownloaded_at: get_redownloaded_at(is_quality_upgrade)
+            media_redownloaded_at: get_redownloaded_at(is_quality_upgrade),
+            media_downloaded_at: get_downloaded_at(media_item, downloaded_media_item, is_quality_upgrade)
           })
 
         :ok = FileSyncing.delete_outdated_files(media_item, updated_media_item)
@@ -119,7 +120,13 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
 
         :ok
 
-      {:recovered, _media_item, _message} ->
+      {:recovered, recovered_media_item, _message} ->
+        # The retry reads this as the original download time, so restore it now
+        {:ok, _} =
+          Media.update_media_item(recovered_media_item, %{
+            media_downloaded_at: get_downloaded_at(media_item, recovered_media_item, is_quality_upgrade)
+          })
+
         {:error, :retry}
 
       {:error, :unsuitable_for_download, _message} ->
@@ -164,6 +171,11 @@ defmodule Pinchflat.Downloading.MediaDownloadWorker do
 
   defp get_redownloaded_at(true), do: DateTime.utc_now()
   defp get_redownloaded_at(_), do: nil
+
+  # Retention counts from the first download. An upgrade replaces the file, so without
+  # this every upgraded item would get a fresh retention period.
+  defp get_downloaded_at(%{media_downloaded_at: %DateTime{} = original}, _downloaded, true), do: original
+  defp get_downloaded_at(_media_item, downloaded_media_item, _), do: downloaded_media_item.media_downloaded_at
 
   defp action_on_error(message) do
     # This will attempt re-download at the next indexing, but it won't be retried
