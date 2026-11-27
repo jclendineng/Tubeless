@@ -1,4 +1,4 @@
-ARG BASE_IMAGE="ghcr.io/ghostmaintainers/tubeless-ci-base:latest"
+ARG BASE_IMAGE="ghcr.io/jclendineng/tubeless:ci-base"
 
 FROM ${BASE_IMAGE}
 

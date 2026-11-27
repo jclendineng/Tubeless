@@ -145,14 +145,14 @@ esbuild and Tailwind are driven through Mix aliases defined in `mix.exs`, not st
 
 ## Docker
 
-| File                              | Used in    | Purpose                                                                                                                                                                                                               |
-| --------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docker/ci-base.Dockerfile`       | CI/release | Shared base image (`ghcr.io/communitymaintained/pinchflat-ci-base`) — provides Elixir, OTP, Node, FFmpeg, yt-dlp, Deno, Apprise. Both dev and selfhosted images build FROM it so toolchain versions live in one place |
-| `docker/ci-base.requirements.txt` | CI/release | Pinned pip requirements (e.g. Apprise) installed into the ci-base image, managed by Renovate                                                                                                                          |
-| `docker/dev.Dockerfile`           | local only | Dev image — builds FROM `pinchflat-ci-base`, then installs dev extras (oh-my-zsh, dev deps)                                                                                                                           |
-| `docker/selfhosted.Dockerfile`    | CI/release | Production multi-stage build — builder stage runs on `pinchflat-ci-base` and compiles the OTP release; minimal runtime image with only production deps (ffmpeg/yt-dlp copied from the builder)                        |
-| `docker/docker-run.dev.sh`        | local only | Dev container startup script — installs deps, migrates DB, starts IEX Phoenix server                                                                                                                                  |
-| `docker-compose.yml`              | local only | Local dev environment (builds `dev.Dockerfile`, mounts working dir, exposes port 4008)                                                                                                                                |
+| File                              | Used in    | Purpose                                                                                                                                                                                                                                                                                   |
+| --------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docker/ci-base.Dockerfile`       | CI/release | Shared base image (`ghcr.io/<owner>/tubeless:ci-base`, plus immutable `ci-base-sha-<short>` tags, in the same package as the app image) — provides Elixir, OTP, Node, FFmpeg, yt-dlp, Deno, Apprise. Both dev and selfhosted images build FROM it so toolchain versions live in one place |
+| `docker/ci-base.requirements.txt` | CI/release | Pinned pip requirements (e.g. Apprise) installed into the ci-base image, managed by Renovate                                                                                                                                                                                              |
+| `docker/dev.Dockerfile`           | local only | Dev image — builds FROM `pinchflat-ci-base`, then installs dev extras (oh-my-zsh, dev deps)                                                                                                                                                                                               |
+| `docker/selfhosted.Dockerfile`    | CI/release | Production multi-stage build — builder stage runs on `pinchflat-ci-base` and compiles the OTP release; minimal runtime image with only production deps (ffmpeg/yt-dlp copied from the builder)                                                                                            |
+| `docker/docker-run.dev.sh`        | local only | Dev container startup script — installs deps, migrates DB, starts IEX Phoenix server                                                                                                                                                                                                      |
+| `docker-compose.yml`              | local only | Local dev environment (builds `dev.Dockerfile`, mounts working dir, exposes port 4008)                                                                                                                                                                                                    |
 
 ---
 
@@ -181,10 +181,11 @@ esbuild and Tailwind are driven through Mix aliases defined in `mix.exs`, not st
 
 Both files are CI/release only — they are never run locally.
 
-| File                 | Purpose                                                                                                                                |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci.yml`             | PR pipeline — linting, Docker build/cache, pushes PR/RC image to GHCR                                                                  |
-| `release-please.yml` | Release pipeline — runs tests, invokes Release-Please, bumps versions, builds and pushes multi-arch Docker images to Docker Hub + GHCR |
+| File                 | Purpose                                                                                                                                                                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`             | PR pipeline — linting, Docker build/cache, pushes PR/RC image to GHCR                                                                                                                                                                  |
+| `fork-image.yml`     | Fork image — on every push to `main`/`development` (or a `v*` tag) builds `selfhosted.Dockerfile` and pushes `ghcr.io/<owner>/tubeless` with `:latest` (main), `:development`, `:sha-<short>`, and semver tags. amd64 only, no secrets |
+| `release-please.yml` | Release pipeline — runs tests, invokes Release-Please, bumps versions, builds and pushes multi-arch Docker images to Docker Hub + GHCR                                                                                                 |
 
 ---
 
