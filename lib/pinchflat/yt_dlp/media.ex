@@ -157,7 +157,7 @@ defmodule Pinchflat.YtDlp.Media do
       title: response["title"],
       description: response["description"],
       original_url: response["original_url"],
-      livestream: !!response["live_status"] && response["live_status"] != "not_live",
+      livestream: livestream?(response),
       duration_seconds: response["duration"] && round(response["duration"]),
       short_form_content: response["original_url"] && short_form_content?(response),
       uploaded_at: response["upload_date"] && parse_uploaded_at(response),
@@ -165,6 +165,15 @@ defmodule Pinchflat.YtDlp.Media do
       predicted_media_filepath: response["filename"]
     }
   end
+
+  # YouTube's own classification, from whether the video is live content. Prefer it over
+  # live_status, which says "is_upcoming" for anything scheduled, so a premiere (an
+  # ordinary upload with a countdown) would otherwise be recorded as a livestream
+  defp livestream?(%{"media_type" => media_type}) when media_type in ["short", "video", "livestream"] do
+    media_type == "livestream"
+  end
+
+  defp livestream?(response), do: !!response["live_status"] && response["live_status"] != "not_live"
 
   defp short_form_content?(response) do
     cond do

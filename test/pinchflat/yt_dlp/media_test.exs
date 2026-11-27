@@ -434,6 +434,41 @@ defmodule Pinchflat.YtDlp.MediaTest do
       assert %Media{livestream: false} = Media.response_to_struct(response)
     end
 
+    test "doesn't treat an upcoming premiere as a livestream" do
+      # live_status is "is_upcoming" for anything scheduled, livestream or premiere
+      response = %{
+        "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
+        "live_status" => "is_upcoming",
+        "media_type" => "video",
+        "upload_date" => "20210101"
+      }
+
+      assert %Media{livestream: false} = Media.response_to_struct(response)
+    end
+
+    test "treats upcoming, live, and past streams YouTube classifies as livestreams as livestreams" do
+      for live_status <- ["is_upcoming", "is_live", "was_live"] do
+        response = %{
+          "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
+          "live_status" => live_status,
+          "media_type" => "livestream",
+          "upload_date" => "20210101"
+        }
+
+        assert %Media{livestream: true} = Media.response_to_struct(response)
+      end
+    end
+
+    test "falls back to live_status when there's no media_type" do
+      response = %{
+        "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
+        "live_status" => "was_live",
+        "upload_date" => "20210101"
+      }
+
+      assert %Media{livestream: true} = Media.response_to_struct(response)
+    end
+
     test "doesn't blow up if playlist_index is missing" do
       response = %{
         "original_url" => "https://www.youtube.com/watch?v=bbbbbbbbbbb",
