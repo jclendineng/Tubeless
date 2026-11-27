@@ -330,8 +330,11 @@ defmodule Pinchflat.Downloading.MediaDownloadWorkerTest do
     end
 
     test "downloads when the looked-up duration is within the limits", %{media_item: media_item} do
-      expect(YtDlpRunnerMock, :run, fn _url, :get_media_attributes, _opts, _ot, _addl ->
-        {:ok, Phoenix.json_library().encode!(%{"duration" => 300})}
+      stub(YtDlpRunnerMock, :run, fn
+        _url, :get_media_attributes, _opts, _ot, _addl -> {:ok, Phoenix.json_library().encode!(%{"duration" => 300})}
+        _url, :get_downloadable_status, _opts, _ot, _addl -> {:ok, "{}"}
+        _url, :download_thumbnail, _opts, _ot, _addl -> {:ok, ""}
+        _url, :download, _opts, _ot, _addl -> {:ok, render_metadata(:media_metadata)}
       end)
 
       perform_job(MediaDownloadWorker, %{id: media_item.id})
@@ -340,8 +343,11 @@ defmodule Pinchflat.Downloading.MediaDownloadWorkerTest do
     end
 
     test "falls through to the download when the lookup fails", %{media_item: media_item} do
-      expect(YtDlpRunnerMock, :run, fn _url, :get_media_attributes, _opts, _ot, _addl ->
-        {:error, "This live event will begin in a few moments", 1}
+      stub(YtDlpRunnerMock, :run, fn
+        _url, :get_media_attributes, _opts, _ot, _addl -> {:error, "This live event will begin in a few moments", 1}
+        _url, :get_downloadable_status, _opts, _ot, _addl -> {:ok, "{}"}
+        _url, :download_thumbnail, _opts, _ot, _addl -> {:ok, ""}
+        _url, :download, _opts, _ot, _addl -> {:ok, render_metadata(:media_metadata)}
       end)
 
       perform_job(MediaDownloadWorker, %{id: media_item.id})
