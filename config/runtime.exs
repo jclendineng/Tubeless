@@ -105,6 +105,21 @@ if config_env() == :prod do
   journal_mode = String.to_existing_atom(System.get_env("JOURNAL_MODE", "wal"))
   # For running PF in a subdirectory via a reverse proxy
   base_route_path = System.get_env("BASE_ROUTE_PATH", "/")
+
+  # Comma-separated origins the browser uses to reach Tubeless, eg:
+  # "https://tubeless.example.com,http://192.168.1.10:8945". "//host" matches any scheme
+  # and port. Unset, a socket is accepted only from the exact scheme/host/port it arrived
+  # on, which a reverse proxy changes, so proxied installs must list their public origin.
+  allowed_origins =
+    System.get_env("ALLOWED_ORIGINS", "")
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.reject(&(&1 == ""))
+    |> case do
+      [] -> :conn
+      origins -> origins
+    end
+
   enable_ipv6 = String.length(System.get_env("ENABLE_IPV6", "")) > 0
   enable_prometheus = String.length(System.get_env("ENABLE_PROMETHEUS", "")) > 0
 
@@ -175,6 +190,7 @@ if config_env() == :prod do
       port: String.to_integer(System.get_env("PORT") || "4000")
     ],
     url: [path: base_route_path],
+    check_origin: allowed_origins,
     secret_key_base: secret_key_base
 
   config :pinchflat, :logger, [

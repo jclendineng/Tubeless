@@ -283,6 +283,23 @@ reusing the same indexing output template. There's no file follower here — it'
 | `extractor_sleep_interval_seconds` | Delay between yt-dlp requests (rate limiting, default 0)                                                                          |
 | `ignore_unavailable_media`         | Mark members-only/private/removed videos as permanently unavailable instead of retrying                                           |
 
+## LiveView Origin Check
+
+Live pages (anything that updates without a reload) run over a websocket, and Tubeless only
+accepts that socket from its own pages. By default the browser's origin must match the
+scheme, host and port the request arrived on, which holds when you open Tubeless directly
+(eg: `http://192.168.1.10:8945`).
+
+A reverse proxy changes those (an `https://tubeless.example.com` origin reaching the app as
+plain HTTP on port 8945), so behind one, set `ALLOWED_ORIGINS` to the address(es) you browse to:
+
+```bash
+ALLOWED_ORIGINS=https://tubeless.example.com,http://192.168.1.10:8945
+```
+
+`//host` matches any scheme and port. When the origin isn't allowed, pages still load but stop
+updating live, and the server log shows `Could not check origin for Phoenix.Socket transport`.
+
 ## Proxy Support
 
 Tubeless can route yt-dlp network traffic through a proxy. Configured under
