@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.6](https://github.com/jclendineng/Tubeless/compare/v0.0.5...v0.0.6) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependencies with published security advisories ([#29](https://github.com/jclendineng/Tubeless/issues/29)) ([f86a9b0](https://github.com/jclendineng/Tubeless/commit/f86a9b097b8930c782d10f5e168c4b1c6a958e88))
+* keep the retention countdown when a video's quality is upgraded ([#19](https://github.com/jclendineng/Tubeless/issues/19)) ([be5d811](https://github.com/jclendineng/Tubeless/commit/be5d8114e57dccc4cffd252ea4cc1db2f208cba9))
+* only accept live-page connections from Tubeless's own address ([#30](https://github.com/jclendineng/Tubeless/issues/30)) ([9e031ac](https://github.com/jclendineng/Tubeless/commit/9e031ac2e22aaac9def9e3322ed6d4e262391bb3))
+* stop holding back upcoming streams on sources with duration limits ([#18](https://github.com/jclendineng/Tubeless/issues/18)) ([5a4b731](https://github.com/jclendineng/Tubeless/commit/5a4b731ad497613c997f7420e9d18f12434ef69d))
+
+
+### Chores
+
+* **ci:** have Dependabot update Elixir and JavaScript dependencies ([#17](https://github.com/jclendineng/Tubeless/issues/17)) ([6d192cd](https://github.com/jclendineng/Tubeless/commit/6d192cdbb049589bfbf1310089e3ca696b3b976d))
+* **deps-dev:** bump prettier from 3.9.6 to 3.10.1 ([#22](https://github.com/jclendineng/Tubeless/issues/22)) ([1c25bdf](https://github.com/jclendineng/Tubeless/commit/1c25bdf5dffe13edbadd69e37c6dc19336ce250c))
+* **deps-dev:** bump sqleton from 4.0.0 to 5.0.0 ([#20](https://github.com/jclendineng/Tubeless/issues/20)) ([f5e786e](https://github.com/jclendineng/Tubeless/commit/f5e786e963c3d1491b9d3a98dd75d371725573cc))
+* **deps:** bump alpinejs from 3.15.12 to 3.17.5 in /assets ([#24](https://github.com/jclendineng/Tubeless/issues/24)) ([6cc0971](https://github.com/jclendineng/Tubeless/commit/6cc09716ec1d8ba25f5334b520e6c7809bd22086))
+* **deps:** bump docker/login-action from 4.7.0 to 4.8.0 ([#16](https://github.com/jclendineng/Tubeless/issues/16)) ([f11542a](https://github.com/jclendineng/Tubeless/commit/f11542a6b169d0fe6b4303c3f3b1111af9c6a9f7))
+
 ## [0.0.5](https://github.com/jclendineng/Tubeless/compare/v0.0.4...v0.0.5) (2026-11-27)
 
 
