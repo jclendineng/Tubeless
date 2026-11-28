@@ -119,6 +119,7 @@ if config_env() == :prod do
       [] -> :conn
       origins -> origins
     end
+
   enable_ipv6 = String.length(System.get_env("ENABLE_IPV6", "")) > 0
   enable_prometheus = String.length(System.get_env("ENABLE_PROMETHEUS", "")) > 0
 
