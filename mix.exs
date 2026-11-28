@@ -64,9 +64,9 @@ defmodule Pinchflat.MixProject do
     [
       {:phoenix, "~> 1.8.0"},
       {:phoenix_ecto, "~> 4.4"},
-      {:ecto, "~> 3.12.3"},
-      {:ecto_sql, "~> 3.12"},
-      {:ecto_sqlite3, "~> 0.19.0"},
+      {:ecto, "~> 3.14"},
+      {:ecto_sql, "~> 3.14"},
+      {:ecto_sqlite3, "~> 0.26"},
       {:ecto_sqlite3_extras, "~> 1.2.0"},
       {:phoenix_html, "~> 4.2"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -86,14 +86,15 @@ defmodule Pinchflat.MixProject do
       {:oban, "~> 2.17"},
       {:nimble_parsec, "~> 1.4"},
       {:timex, "~> 3.7"},
+      {:hackney, "~> 4.0"},
       {:prom_ex, "~> 1.11"},
       {:earmark_parser, "~> 1.4"},
       {:mox, "~> 1.0", only: :test},
       {:credo, "~> 1.7.7", only: [:dev, :test], runtime: false},
       {:credo_naming, "~> 2.1", only: [:dev, :test], runtime: false},
-      {:ex_check, "~> 0.16.0", only: [:dev, :test], runtime: false},
+      {:ex_check, "~> 0.17.1", only: [:dev, :test], runtime: false},
       {:faker, "~> 0.19", only: :test},
-      {:sobelow, "~> 0.14", only: [:dev, :test], runtime: false}
+      {:sobelow, "~> 0.19", only: [:dev, :test], runtime: false}
     ]
   end
 
