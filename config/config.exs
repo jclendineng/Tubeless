@@ -76,8 +76,10 @@ config :pinchflat, Pinchflat.Repo,
 # Configures the endpoint
 config :pinchflat, PinchflatWeb.Endpoint,
   url: [host: "localhost", port: 8945],
-  # NOTE: this must be updated if ever deployed traditionally (ie: not self-hosted)
-  check_origin: false,
+  # Only pages served by this instance may open a LiveView socket. `:conn` compares the
+  # Origin's scheme, host and port with the request's, which holds for direct access.
+  # Behind a reverse proxy those differ, so ALLOWED_ORIGINS (runtime.exs) lists them.
+  check_origin: :conn,
   adapter: Phoenix.Endpoint.Cowboy2Adapter,
   render_errors: [
     formats: [html: PinchflatWeb.ErrorHTML, json: PinchflatWeb.ErrorJSON],
